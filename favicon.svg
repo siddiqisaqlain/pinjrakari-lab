@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+<style>.s{fill:none;stroke:#1B1B1A;stroke-width:3;stroke-linejoin:round}.d{fill:#C84E08}@media (prefers-color-scheme:dark){.s{stroke:#F2F2F0}.d{fill:#FF7A2E}}</style>
+<rect class="s" x="9" y="9" width="30" height="30"/>
+<rect class="s" x="9" y="9" width="30" height="30" transform="rotate(45 24 24)"/>
+<circle class="d" cx="24" cy="24" r="4.8"/>
+</svg>

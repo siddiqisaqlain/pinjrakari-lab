@@ -1,0 +1,1056 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pinjrakari Lab</title>
+<meta name="description" content="Build Islamic star patterns with Hankin's polygons-in-contact method, inspired by Kashmiri pinjrakari lattice work, and export them as real-scale CAD drawings. By Saqlain Siddiqi.">
+<meta name="author" content="Saqlain Siddiqi">
+<meta name="theme-color" content="#E6E6E3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Pinjrakari Lab">
+<meta property="og:description" content="Build Islamic star patterns with Hankin's method and export them to CAD. By Saqlain Siddiqi.">
+<meta property="og:image" content="https://siddiqisaqlain.github.io/pinjrakari-lab/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Pinjrakari Lab">
+<meta name="twitter:description" content="Build Islamic star patterns with Hankin's method and export them to CAD. By Saqlain Siddiqi.">
+<meta name="twitter:image" content="https://siddiqisaqlain.github.io/pinjrakari-lab/og-image.png">
+<style>
+html { color-scheme: light; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+/* Layout: quiet header, then the drawing (sticky) with a dial beneath it, beside an inspector of grouped cards.
+   Language: Braun grey and white, one orange accent, system type, as little ornament as possible.
+   The Kashmiri character lives in the pattern itself: walnut strapwork on a warm sheet. */
+:root {
+  --bg: #E6E6E3;
+  --surface: #FFFFFF;
+  --track: #E3E3E0;
+  --ink: #1B1B1A;
+  --muted: #6A6A66;
+  --hair: rgba(0, 0, 0, .12);
+  --accent: #C84E08;
+  --accent-ink: #FFFFFF;
+  --sheet: #FBFAF7;
+  --line: #3B2412;
+  --edge: #2A190B;
+  --strap: #A8713F;
+  --grid: #CFCDC6;
+  --lake: #1F6F6A;
+  --knob: #F4F4F2;
+  --knob-edge: #CFCFCB;
+  --tick: #8A8A86;
+  --glass: rgba(230, 230, 227, .93);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .06), 0 8px 24px rgba(0, 0, 0, .06);
+  --thumb-shadow: 0 1px 3px rgba(0, 0, 0, .18), 0 0 0 .5px rgba(0, 0, 0, .06);
+  --f: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --f-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --ease: cubic-bezier(.3, .9, .3, 1);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121212; --surface: #1D1D1D; --track: #2C2C2C; --ink: #F2F2F0; --muted: #9B9B96; --hair: rgba(255, 255, 255, .14);
+    --accent: #FF7A2E; --accent-ink: #1B0C02; --sheet: #0F0D0B; --line: #E7C27A; --edge: #5A3A1E; --strap: #B27B45; --grid: #2E2A24;
+    --lake: #5FC2B8; --knob: #2D2D2C; --knob-edge: #474744; --tick: #77776F; --glass: rgba(18, 18, 18, .9);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+    --thumb-shadow: 0 1px 3px rgba(0, 0, 0, .5), 0 0 0 .5px rgba(255, 255, 255, .08);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121212; --surface: #1D1D1D; --track: #2C2C2C; --ink: #F2F2F0; --muted: #9B9B96; --hair: rgba(255, 255, 255, .14);
+  --accent: #FF7A2E; --accent-ink: #1B0C02; --sheet: #0F0D0B; --line: #E7C27A; --edge: #5A3A1E; --strap: #B27B45; --grid: #2E2A24;
+  --lake: #5FC2B8; --knob: #2D2D2C; --knob-edge: #474744; --tick: #77776F; --glass: rgba(18, 18, 18, .9);
+  --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+  --thumb-shadow: 0 1px 3px rgba(0, 0, 0, .5), 0 0 0 .5px rgba(255, 255, 255, .08);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body {
+  background: var(--bg); color: var(--ink);
+  font: 15px/1.47 var(--f);
+  -webkit-font-smoothing: antialiased;
+  padding-block: 20px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: var(--bg); z-index: 10; }
+a { color: inherit; text-underline-offset: 3px; text-decoration-color: var(--hair); }
+a:hover { text-decoration-color: currentColor; }
+.shell { max-width: 1280px; margin: 0 auto; display: grid; gap: 24px; }
+output, .num { font-variant-numeric: tabular-nums; }
+
+/* Header */
+.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 32px; }
+.brand { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.mark { width: 44px; height: 44px; flex: none; color: var(--ink); }
+.mark .dot { fill: var(--accent); stroke: none; }
+h1 { font: 700 clamp(28px, 4.4vw, 38px)/1.05 var(--f); letter-spacing: -0.025em; margin: 0; }
+.sub { margin: 4px 0 0; color: var(--muted); max-width: 58ch; }
+.author { display: grid; gap: 1px; font-size: 13px; color: var(--muted); text-align: right; }
+.author .by { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.author strong { font-size: 17px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
+
+/* Stage */
+main { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 24px; align-items: start; }
+.stage { display: grid; gap: 16px; min-width: 0; position: sticky; top: 16px; }
+.pin { display: grid; gap: 14px; min-width: 0; }
+.sheetwrap { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); padding: 16px; display: grid; place-items: center; min-width: 0; }
+canvas#cv { display: block; touch-action: none; cursor: grab; max-width: 100%; border-radius: 3px; }
+canvas#cv:active { cursor: grabbing; }
+
+.dialcard { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 14px; background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); padding: 14px 16px; position: sticky; top: 16px; z-index: 6; }
+.dial { width: var(--dial, 92px); height: var(--dial, 92px); -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: none; cursor: grab; border-radius: 50%; outline-offset: 4px; }
+.dial svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.dial .tick { stroke: var(--tick); stroke-width: 1.4; stroke-linecap: round; }
+.dial .tick.major { stroke: var(--ink); stroke-width: 2; }
+.dial .dl { font: 500 8.5px var(--f); fill: var(--muted); }
+.dial .body { fill: var(--knob); stroke: var(--knob-edge); stroke-width: 1; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .18)); }
+.dial .groove { fill: none; stroke: var(--knob-edge); stroke-width: .8; }
+.dial .mark-line { stroke: var(--accent); stroke-width: 3.2; stroke-linecap: round; }
+.dial #knob { transform-origin: 60px 60px; transition: transform .14s var(--ease); }
+.dial.drag #knob { transition: none; }
+.angle-read { display: grid; gap: 0; min-width: 0; }
+.cap { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+.angle-read output { font: 600 clamp(30px, 6vw, 40px)/1.05 var(--f); letter-spacing: -0.02em; }
+.stepper { display: flex; gap: 8px; }
+.stepper button { width: 42px; height: 42px; padding: 0; border-radius: 50%; background: var(--surface); box-shadow: var(--thumb-shadow); font-size: 22px; font-weight: 400; line-height: 1; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.hint { margin: 0; flex-basis: 100%; font-size: 12px; color: var(--muted); }
+.coarse-only { display: none; }
+.caption { margin: 0; min-height: 3em; max-width: 70ch; }
+.readout { display: flex; flex-wrap: wrap; gap: 2px 20px; font: 400 12px var(--f-mono); color: var(--muted); }
+.readout b { color: var(--ink); font-weight: 500; }
+
+/* Controls */
+button {
+  font: 500 14px var(--f); color: var(--ink); background: var(--track);
+  border: 0; border-radius: 10px; padding: 9px 14px; cursor: pointer;
+  transition: transform .12s var(--ease), filter .15s, background-color .2s;
+}
+button:hover { filter: brightness(.96); }
+button:active { transform: scale(.97); }
+button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, summary:focus-visible, a:focus-visible, .dial:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.primary { background: var(--accent); color: var(--accent-ink); border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 600; }
+.primary:hover { filter: brightness(1.06); }
+
+.seg { position: relative; display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); background: var(--track); border-radius: 10px; padding: 2px; isolation: isolate; }
+.seg::before { content: ""; position: absolute; top: 2px; bottom: 2px; left: 2px; width: calc((100% - 4px) / var(--n, 2)); background: var(--surface); border-radius: 8px; box-shadow: var(--thumb-shadow); transform: translateX(calc(var(--i, 0) * 100%)); transition: transform .3s var(--ease); z-index: -1; }
+.seg button, .seg button[aria-pressed="true"] { background: transparent; border-radius: 8px; padding: 7px 4px; min-height: 32px; text-align: center; font-size: 13px; color: var(--ink); }
+.seg button[aria-pressed="true"] { font-weight: 600; }
+.seg button:hover { filter: none; }
+
+.panel { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.group { background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); min-width: 0; }
+.group > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 14px 16px; min-height: 48px; border-radius: 14px; }
+.group > summary::-webkit-details-marker { display: none; }
+.group > summary::after { content: ""; margin-left: auto; width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform .25s var(--ease); flex: none; }
+.group[open] > summary::after { transform: rotate(-135deg); }
+.group[open] > summary { padding-bottom: 8px; }
+h2 { font: 600 15px var(--f); letter-spacing: -0.005em; margin: 0; }
+.gbody { display: grid; gap: 14px; padding: 4px 16px 16px; min-width: 0; }
+.export .gbody { gap: 10px; }
+.row { display: grid; gap: 2px; min-width: 0; }
+.row label { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 14px; }
+.row output { font: 500 14px var(--f); color: var(--muted); }
+.switchrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14px; min-height: 32px; }
+.note { margin: 0; font-size: 12.5px; color: var(--muted); }
+.status { margin: 0; font: 400 12px var(--f-mono); color: var(--lake); min-height: 1.4em; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+
+.tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.tile { display: grid; gap: 1px; padding: 5px 5px 7px; text-align: left; background: var(--surface); border-radius: 10px; box-shadow: inset 0 0 0 1px var(--hair); align-content: start; }
+.tile[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 2px var(--accent); }
+.tile canvas { display: block; width: 100%; aspect-ratio: 1; border-radius: 6px; background: var(--sheet); margin-bottom: 4px; }
+.tile .tl { font-size: 12.5px; font-weight: 600; padding: 0 3px; line-height: 1.25; }
+.tile .ts { font-size: 11px; color: var(--muted); padding: 0 3px; line-height: 1.25; }
+
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 28px; background: transparent; margin: 0; --p: 50%; }
+input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--accent) var(--p), var(--track) var(--p)); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; margin-top: -10px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .12), 0 2px 6px rgba(0, 0, 0, .3); border: 0; }
+input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--track); }
+input[type=range]::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--accent); }
+input[type=range]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .12), 0 2px 6px rgba(0, 0, 0, .3); }
+input[type=range]:disabled { opacity: .35; }
+input[type=number] {
+  width: 100%; font: 500 16px var(--f); color: var(--ink); background: var(--track);
+  border: 0; padding: 9px 12px; border-radius: 10px; font-variant-numeric: tabular-nums;
+}
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.fields label { display: grid; gap: 4px; font-size: 12.5px; color: var(--muted); }
+input.switch { -webkit-appearance: none; appearance: none; flex: none; width: 46px; height: 28px; border-radius: 14px; background: var(--track); position: relative; cursor: pointer; margin: 0; transition: background-color .25s var(--ease); }
+input.switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3); transition: transform .3s var(--ease); }
+input.switch:checked { background: var(--accent); }
+input.switch:checked::after { transform: translateX(18px); }
+
+.context { background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); padding: 0 16px; }
+.context summary { cursor: pointer; padding: 0; min-height: 48px; display: flex; align-items: center; font-weight: 600; font-size: 15px; list-style: none; }
+.context summary::-webkit-details-marker { display: none; }
+.context summary::after { content: ""; margin-left: auto; width: 7px; height: 7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); transition: transform .25s var(--ease); }
+.context[open] summary::after { transform: rotate(-135deg); }
+.context .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px 24px; padding: 4px 0 16px; }
+.context h3 { font: 600 15px var(--f); margin: 0 0 2px; }
+.context p { margin: 0; font-size: 13.5px; color: var(--muted); }
+
+footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 24px; font-size: 12.5px; color: var(--muted); border-top: 1px solid var(--hair); padding-top: 16px; }
+footer strong { color: var(--ink); font-weight: 600; }
+
+body.present main { grid-template-columns: minmax(0, 1fr); }
+body.present .panel > :not(.dialcard), body.present .context { display: none; }
+body.present .stage { position: static; }
+
+@media (min-width: 921px) {
+  body.present .dialcard { position: static; max-width: 440px; }
+}
+@media (max-width: 920px) {
+  body { padding-bottom: calc(124px + env(safe-area-inset-bottom, 0px)); }
+  /* The dial sits in a dock at the bottom of the screen, where the thumb rests */
+  .dialcard { position: fixed; top: auto; z-index: 20; border-radius: 28px; padding: 10px 12px 10px 20px; gap: 12px;
+              left: max(12px, env(safe-area-inset-left, 0px)); right: max(12px, env(safe-area-inset-right, 0px));
+              bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+              background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(22px); backdrop-filter: saturate(180%) blur(22px);
+              box-shadow: 0 10px 32px rgba(0, 0, 0, .2), 0 0 0 .5px var(--hair); }
+  .angle-read output { font-size: 30px; }
+  main { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  /* The stage's children join the main grid so the drawing can stay pinned while the controls scroll */
+  .stage { display: contents; }
+  .pin { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; padding-block: 6px 10px; gap: 10px;
+         background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); }
+  .sheetwrap { padding: 10px; border-radius: 14px; }
+  .dial { --dial: 76px; }
+  .author { text-align: left; }
+}
+@media (max-width: 520px) {
+  .mark { width: 36px; height: 36px; }
+  .brand { gap: 12px; }
+  .sub { font-size: 14px; }
+  .seg button { font-size: 12px; padding: 7px 2px; }
+  footer { flex-direction: column; }
+}
+@media (max-height: 520px) { .pin { position: static; } }
+@media (pointer: coarse) {
+  .coarse-only { display: revert; }
+  canvas#cv { touch-action: pan-y pinch-zoom; }
+  canvas#cv.drag-on { touch-action: none; }
+  button { min-height: 44px; }
+  .seg button { min-height: 40px; }
+  .switchrow { min-height: 44px; }
+  input[type=range] { height: 36px; }
+  .group > summary, .context summary { min-height: 52px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+<noscript><p style="padding:24px;font:16px system-ui">Pinjrakari Lab needs JavaScript to draw the patterns.</p></noscript>
+
+
+<div class="shell">
+  <header class="top">
+    <div class="brand">
+      <svg class="mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true">
+        <rect x="9" y="9" width="30" height="30"/>
+        <rect x="9" y="9" width="30" height="30" transform="rotate(45 24 24)"/>
+        <circle class="dot" cx="24" cy="24" r="4.5"/>
+      </svg>
+      <div>
+        <h1>Pinjrakari Lab</h1>
+        <p class="sub">Build Islamic star patterns with Hankin's polygons-in-contact method, the geometry behind Kashmiri lattice work, then export them to CAD.</p>
+      </div>
+    </div>
+    <div class="author">
+      <span class="by">Designed by</span>
+      <strong>Saqlain Siddiqi</strong>
+      <span>B.Arch, IUST Awantipora, Kashmir</span>
+      <a href="https://linkedin.com/in/saqlain-siddiqi" target="_blank" rel="noopener">linkedin.com/in/saqlain-siddiqi</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="stage" aria-label="Pattern drawing">
+      <div class="pin">
+        <div class="sheetwrap" id="sheetwrap"><canvas id="cv" aria-label="Star pattern drawing. Drag to pan."></canvas></div>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="bSurprise">Surprise me</button>
+        <button type="button" id="bReset">Reset view</button>
+        <button type="button" id="bMove" class="coarse-only" aria-pressed="false">Move pattern</button>
+        <button type="button" id="bPresent" aria-pressed="false">Present</button>
+        <p class="hint coarse-only">Swipe scrolls the page. Turn on Move pattern to drag the drawing or the attractor ring.</p>
+      </div>
+
+      <div class="seg" id="steps" style="--n:5; --i:4" role="group" aria-label="Construction step">
+        <button type="button" data-step="1" aria-pressed="false">Tiling</button>
+        <button type="button" data-step="2" aria-pressed="false">Midpoints</button>
+        <button type="button" data-step="3" aria-pressed="false">Rays</button>
+        <button type="button" data-step="4" aria-pressed="false">Trim</button>
+        <button type="button" data-step="5" aria-pressed="true">Pattern</button>
+      </div>
+      <p class="caption" id="cap"></p>
+      <div class="readout" id="readout"></div>
+
+      <details class="context" open>
+        <summary>From the workshop to the screen</summary>
+        <div class="cols">
+          <div><h3>Pinjrakari</h3><p>Kashmiri lattice screens, built from small pieces of wood, usually walnut or deodar, fitted together without nails. Try the strapwork view to read a pattern as wooden strips.</p></div>
+          <div><h3>Khatamband</h3><p>Ceilings made of small interlocking wooden pieces that form geometric stars. The 8-point and 12-point presets work in the same family of geometry.</p></div>
+          <div><h3>The method</h3><p>Hankin's method puts rays on the midpoint of each tiling edge and trims them where they meet. The contact angle decides how open or tight the star becomes.</p></div>
+        </div>
+      </details>
+    </section>
+
+    <aside class="panel" aria-label="Controls">
+        <div class="dialcard" id="dialcard">
+          <div class="angle-read">
+            <span class="cap">Contact angle</span>
+            <output id="o-theta" for="dial"></output>
+          </div>
+          <div class="stepper">
+            <button type="button" id="aMinus" aria-label="Decrease angle by half a degree">−</button>
+            <button type="button" id="aPlus" aria-label="Increase angle by half a degree">+</button>
+          </div>
+          <div class="dial" id="dial" role="slider" tabindex="0" aria-label="Contact angle" aria-valuemin="5" aria-valuemax="85" aria-valuenow="78">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <g id="ticks"></g>
+              <text class="dl" x="22" y="106" text-anchor="middle">5</text>
+              <text class="dl" x="98" y="106" text-anchor="middle">85</text>
+              <g id="knob">
+                <circle class="body" cx="60" cy="60" r="38"/>
+                <circle class="groove" cx="60" cy="60" r="33"/>
+                <line class="mark-line" x1="60" y1="27" x2="60" y2="38"/>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+      <details class="group" open>
+        <summary><h2>Starter patterns</h2></summary>
+        <div class="gbody"><div class="tiles" id="presets"></div></div>
+      </details>
+
+      <details class="group" open>
+        <summary><h2>Base tiling</h2></summary>
+        <div class="gbody"><div class="tiles" id="tilings"></div></div>
+      </details>
+
+      <details class="group" open>
+        <summary><h2>Attractor</h2></summary>
+        <div class="gbody">
+          <label class="switchrow"><span>Bend the angle around a point</span><input type="checkbox" class="switch" id="att"></label>
+          <div class="row">
+            <label for="str">Strength <output id="o-str"></output></label>
+            <input type="range" id="str" min="-45" max="45" step="1">
+          </div>
+          <div class="row">
+            <label for="rad">Reach <output id="o-rad"></output></label>
+            <input type="range" id="rad" min="40" max="700" step="10">
+          </div>
+          <p class="note">Drag the ring on the drawing to move it, and drag anywhere else to pan. On a touch screen, turn on Move pattern first.</p>
+        </div>
+      </details>
+
+      <details class="group" open>
+        <summary><h2>Size in millimetres</h2></summary>
+        <div class="gbody">
+          <div class="row">
+            <label for="s">Tile edge <output id="o-s"></output></label>
+            <input type="range" id="s" min="30" max="250" step="5">
+          </div>
+          <div class="fields">
+            <label for="W">Panel width<input type="number" id="W" min="100" max="3000" step="10" inputmode="numeric"></label>
+            <label for="H">Panel height<input type="number" id="H" min="100" max="3000" step="10" inputmode="numeric"></label>
+          </div>
+        </div>
+      </details>
+
+      <details class="group" open>
+        <summary><h2>Display</h2></summary>
+        <div class="gbody">
+          <div class="seg" id="styles" style="--n:2; --i:1" role="group" aria-label="Drawing style">
+            <button type="button" data-style="line" aria-pressed="false">Linework</button>
+            <button type="button" data-style="strap" aria-pressed="true">Pinjra strapwork</button>
+          </div>
+          <div class="row" id="strapRow">
+            <label for="strapW">Strap width <output id="o-strapW"></output></label>
+            <input type="range" id="strapW" min="0.03" max="0.25" step="0.01">
+          </div>
+          <label class="switchrow"><span>Show the base tiling</span><input type="checkbox" class="switch" id="grid"></label>
+          <label class="switchrow"><span>Vibration on the dial</span><input type="checkbox" class="switch" id="hap" checked></label>
+          <label class="switchrow"><span>Click sound on the dial</span><input type="checkbox" class="switch" id="snd"></label>
+          <button type="button" id="hapTest">Test vibration</button>
+          <p class="note" id="hapNote">Web pages can vibrate on most Android phones. iPhones and computers do not, so turn on the click sound there.</p>
+        </div>
+      </details>
+
+      <details class="group export" open>
+        <summary><h2>Export for CAD</h2></summary>
+        <div class="gbody">
+          <label class="switchrow"><span>Title block with my name</span><input type="checkbox" class="switch" id="xTitle" checked></label>
+          <label class="switchrow"><span>Panel outline layer</span><input type="checkbox" class="switch" id="xPanel" checked></label>
+          <label class="switchrow"><span>Base tiling layer</span><input type="checkbox" class="switch" id="xGrid"></label>
+          <button type="button" class="primary" id="bDxf">Download CAD drawing (.dxf)</button>
+          <div class="two">
+            <button type="button" id="bSvg">SVG</button>
+            <button type="button" id="bPng">PNG image</button>
+          </div>
+          <button type="button" id="bCopy">Copy DXF text</button>
+          <p class="status" id="status" role="status" aria-live="polite"></p>
+          <p class="note" id="dlNote">Drawn at the tile and panel size above, in millimetres, y pointing up. The DXF arrives in a small zip with an SVG. Layers: PATTERN, PANEL, TILING, TITLE. Every export carries the author's name.</p>
+        </div>
+      </details>
+    </aside>
+  </main>
+
+  <footer>
+    <span>&copy; 2026 <strong>Saqlain Siddiqi</strong>, B.Arch student, IUST Awantipora, Kashmir. Designed and built by the author.</span>
+    <span>Method after Craig Kaplan's account of Hankin's construction; algorithmic control studied by Lee, Kim and Jeon on <a href="https://parametrichouse.com/the-islamic-star-pattern/" target="_blank" rel="noopener">Parametric House</a>.</span>
+  </footer>
+</div>
+<label id="hl" aria-hidden="true" style="position:fixed;left:-100px;top:0;width:1px;height:1px;overflow:hidden;opacity:0"><input type="checkbox" id="hs" tabindex="-1" switch></label>
+
+<script>
+(function () {
+  "use strict";
+  var S3 = Math.sqrt(3), SQ2 = Math.SQRT2, PI = Math.PI;
+  var AUTHOR = "Saqlain Siddiqi", AUTHOR_LINE = "Saqlain Siddiqi, B.Arch, IUST Awantipora, Kashmir", AUTHOR_LINK = "linkedin.com/in/saqlain-siddiqi", APP = "Pinjrakari Lab";
+
+  /* ---------- Tilings (edge length 1) ---------- */
+  function rOf(n) { return 1 / (2 * Math.sin(PI / n)); }
+  var TILINGS = {
+    "4.4.4.4": { name: "Square", a1: [1, 0], a2: [0, 1], polys: [{ c: [0, 0], n: 4, rot: PI / 4 }] },
+    "3.3.3.3.3.3": { name: "Triangle", a1: [1, 0], a2: [0.5, S3 / 2],
+      polys: [{ c: [0.5, S3 / 6], n: 3, rot: PI / 2 }, { c: [1, S3 / 3], n: 3, rot: -PI / 2 }] },
+    "6.6.6": { name: "Hexagon", a1: [1.5, S3 / 2], a2: [0, S3], polys: [{ c: [0, 0], n: 6, rot: 0 }] },
+    "4.8.8": { name: "Truncated square", a1: [1 + SQ2, 0], a2: [0, 1 + SQ2],
+      polys: [{ c: [0, 0], n: 8, rot: PI / 8 }, { c: [(1 + SQ2) / 2, (1 + SQ2) / 2], n: 4, rot: 0 }] },
+    "3.6.3.6": { name: "Trihexagonal", a1: [2, 0], a2: [1, S3],
+      polys: [{ c: [0, 0], n: 6, rot: 0 }, { c: [1, S3 / 3], n: 3, rot: -PI / 2 }, { c: [2, 2 * S3 / 3], n: 3, rot: PI / 2 }] },
+    "3.12.12": { name: "Truncated hexagonal", a1: [2 + S3, 0], a2: [(2 + S3) / 2, (2 + S3) * S3 / 2],
+      polys: [{ c: [0, 0], n: 12, rot: PI / 12 },
+              { c: [(2 + S3) / 2, (2 + S3) * S3 / 6], n: 3, rot: -PI / 2 },
+              { c: [(2 + S3), (2 + S3) * S3 / 3], n: 3, rot: PI / 2 }] }
+  };
+  var TIL_LABEL = { "4.4.4.4": "4⁴", "3.3.3.3.3.3": "3⁶", "6.6.6": "6³", "4.8.8": "4.8.8", "3.6.3.6": "3.6.3.6", "3.12.12": "3.12.12" };
+  Object.keys(TILINGS).forEach(function (k) {
+    var T = TILINGS[k]; T.rmax = Math.max.apply(null, T.polys.map(function (p) { return rOf(p.n); }));
+  });
+  var SURPRISE = ["4.4.4.4", "6.6.6", "4.8.8", "3.6.3.6", "3.12.12"];
+
+  var PRESETS = [
+    { label: "Eight-point star", sub: "4.8.8 · 78°", til: "4.8.8", theta: 78 },
+    { label: "Twelve-point star", sub: "3.12.12 · 75°", til: "3.12.12", theta: 75 },
+    { label: "Six-point stars", sub: "6³ · 45°", til: "6.6.6", theta: 45 },
+    { label: "Star and triangle", sub: "3.6.3.6 · 72°", til: "3.6.3.6", theta: 72 },
+    { label: "Rosette lattice", sub: "4⁴ · 60°", til: "4.4.4.4", theta: 60 },
+    { label: "Interlaced octagons", sub: "4.8.8 · 56°", til: "4.8.8", theta: 56 }
+  ];
+
+  var CAPTIONS = [
+    "",
+    "Start from a tiling of regular polygons. Each edge is shared by two neighbouring polygons.",
+    "Mark the midpoint of every edge. These are the points where the lines will cross.",
+    "From each midpoint, send two rays into each neighbouring polygon, tilted by the contact angle from the edge. Dashed lines show the rays before trimming.",
+    "Trim every ray where it meets the ray from the next edge. What remains is the star pattern.",
+    "The finished pattern. Turn the dial to change the contact angle, or drag the drawing to pan it. Export it from the panel."
+  ];
+
+  /* ---------- State ---------- */
+  var P = { til: "4.8.8", theta: 78, s: 100, W: 900, H: 600, ox: 0, oy: 0,
+            style: "strap", strapW: 0.08, grid: false, att: false, str: 25, rad: 250,
+            ax: 450, ay: 300, step: 5, xGrid: false, xPanel: true, xTitle: true, haptics: true, sound: false };
+  try { var hv = localStorage.getItem("pl.haptics"); if (hv !== null) P.haptics = hv === "1"; var sv = localStorage.getItem("pl.sound"); if (sv !== null) P.sound = sv === "1"; } catch (e) {}
+
+  /* ---------- Geometry ---------- */
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+  function key(x, y) { return Math.round(x * 10) + "," + Math.round(y * 10); }
+  function thetaAt(x, y) {
+    var t = P.theta;
+    if (P.att) { var d = Math.hypot(x - P.ax, y - P.ay); t += P.str * Math.exp(-(d * d) / (P.rad * P.rad)); }
+    return clamp(t, 3, 87) * PI / 180;
+  }
+  function rot(v, a) { var c = Math.cos(a), s = Math.sin(a); return [v[0] * c - v[1] * s, v[0] * s + v[1] * c]; }
+  function isect(p1, d1, p2, d2, fb) {
+    var cr = d1[0] * d2[1] - d1[1] * d2[0];
+    if (Math.abs(cr) < 1e-9) return fb;
+    var dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+    var t = (dx * d2[1] - dy * d2[0]) / cr, u = (dx * d1[1] - dy * d1[0]) / cr;
+    if (t <= 0 || u <= 0) return fb;
+    return [p1[0] + t * d1[0], p1[1] + t * d1[1]];
+  }
+
+  function compute() {
+    var T = TILINGS[P.til], s = P.s, W = P.W, H = P.H;
+    var m = 3 * T.rmax * s;
+    var a1 = [T.a1[0] * s, T.a1[1] * s], a2 = [T.a2[0] * s, T.a2[1] * s];
+    var det = a1[0] * a2[1] - a1[1] * a2[0];
+    var imin = 1e9, imax = -1e9, jmin = 1e9, jmax = -1e9;
+    [[-m, -m], [W + m, -m], [-m, H + m], [W + m, H + m]].forEach(function (c) {
+      var px = c[0] - P.ox, py = c[1] - P.oy;
+      var i = (px * a2[1] - py * a2[0]) / det, j = (-px * a1[1] + py * a1[0]) / det;
+      imin = Math.min(imin, i); imax = Math.max(imax, i); jmin = Math.min(jmin, j); jmax = Math.max(jmax, j);
+    });
+    var edges = {}, mids = {}, rays = [], polyCount = 0;
+    for (var i = Math.floor(imin) - 1; i <= Math.ceil(imax) + 1; i++) {
+      for (var j = Math.floor(jmin) - 1; j <= Math.ceil(jmax) + 1; j++) {
+        var bx = P.ox + i * a1[0] + j * a2[0], by = P.oy + i * a1[1] + j * a2[1];
+        for (var q = 0; q < T.polys.length; q++) {
+          var pd = T.polys[q];
+          var cx = bx + pd.c[0] * s, cy = by + pd.c[1] * s;
+          if (cx < -m || cx > W + m || cy < -m || cy > H + m) continue;
+          polyCount++;
+          var n = pd.n, R = rOf(n) * s, V = [], M = [], E = [], th = [];
+          for (var k = 0; k < n; k++) { var ang = pd.rot + 2 * PI * k / n; V.push([cx + R * Math.cos(ang), cy + R * Math.sin(ang)]); }
+          for (k = 0; k < n; k++) {
+            var v0 = V[k], v1 = V[(k + 1) % n];
+            var mx = (v0[0] + v1[0]) / 2, my = (v0[1] + v1[1]) / 2;
+            M.push([mx, my]);
+            var ex = v1[0] - v0[0], ey = v1[1] - v0[1], el = Math.hypot(ex, ey);
+            E.push([ex / el, ey / el]);
+            th.push(thetaAt(mx, my));
+            var ek = key(mx, my);
+            if (!edges[ek]) edges[ek] = [v0, v1];
+          }
+          var F = [], B = [], Pt = [];
+          for (k = 0; k < n; k++) {
+            F.push(rot(E[k], th[k]));
+            B.push(rot([-E[k][0], -E[k][1]], -th[k]));
+          }
+          for (k = 0; k < n; k++) {
+            var k2 = (k + 1) % n;
+            Pt.push(isect(M[k], F[k], M[k2], B[k2], V[k2]));
+          }
+          for (k = 0; k < n; k++) {
+            var kk = key(M[k][0], M[k][1]);
+            var en = mids[kk] || (mids[kk] = { M: M[k], f: [], b: [] });
+            var pf = Pt[k], pb = Pt[(k - 1 + n) % n];
+            en.f.push(pf); en.b.push(pb);
+            rays.push([M[k], pf]); rays.push([M[k], pb]);
+          }
+        }
+      }
+    }
+    var lines = [], midList = [];
+    Object.keys(mids).forEach(function (kk) {
+      var e = mids[kk]; midList.push(e.M);
+      [e.f, e.b].forEach(function (arr) {
+        if (arr.length >= 2) lines.push([arr[0][0], arr[0][1], arr[1][0], arr[1][1]]);
+        else if (arr.length === 1) lines.push([e.M[0], e.M[1], arr[0][0], arr[0][1]]);
+      });
+    });
+    var edgeList = Object.keys(edges).map(function (kk) { var e = edges[kk]; return [e[0][0], e[0][1], e[1][0], e[1][1]]; });
+    return { lines: lines, edges: edgeList, mids: midList, rays: rays, polys: polyCount };
+  }
+
+  /* Liang-Barsky clip to the panel */
+  function clipSeg(l, W, H) {
+    var x0 = l[0], y0 = l[1], dx = l[2] - l[0], dy = l[3] - l[1];
+    var p = [-dx, dx, -dy, dy], q = [x0, W - x0, y0, H - y0], t0 = 0, t1 = 1;
+    for (var i = 0; i < 4; i++) {
+      if (p[i] === 0) { if (q[i] < 0) return null; }
+      else {
+        var r = q[i] / p[i];
+        if (p[i] < 0) { if (r > t1) return null; if (r > t0) t0 = r; }
+        else { if (r < t0) return null; if (r < t1) t1 = r; }
+      }
+    }
+    if (t1 - t0 < 1e-9) return null;
+    return [x0 + t0 * dx, y0 + t0 * dy, x0 + t1 * dx, y0 + t1 * dy];
+  }
+  function clipAll(arr) {
+    var out = [];
+    for (var i = 0; i < arr.length; i++) { var c = clipSeg(arr[i], P.W, P.H); if (c && Math.hypot(c[2] - c[0], c[3] - c[1]) > 0.01) out.push(c); }
+    return out;
+  }
+
+  /* ---------- Drawing ---------- */
+  function $(id) { return document.getElementById(id); }
+  var cv = $("cv"), sheetwrap = $("sheetwrap"), scale = 1;
+  function cssVar(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  function palette(print) {
+    if (print) return { sheet: "#FFFFFF", pat: "#2B1A0E", edge: "#2B1A0E", strap: "#B07A45", grid: "#C9C3B8", aux: "#1F6F6A" };
+    return { sheet: cssVar("--sheet"), pat: cssVar("--line"), edge: cssVar("--edge"), strap: cssVar("--strap"), grid: cssVar("--grid"), aux: cssVar("--lake") };
+  }
+  function stroke(ctx, segs, X, Y) {
+    ctx.beginPath();
+    for (var i = 0; i < segs.length; i++) { ctx.moveTo(X(segs[i][0]), Y(segs[i][1])); ctx.lineTo(X(segs[i][2]), Y(segs[i][3])); }
+    ctx.stroke();
+  }
+  function draw(ctx, sc, o) {
+    var g = compute(), W = P.W, H = P.H, c = palette(o.print), step = o.print ? 5 : P.step;
+    var X = function (x) { return x * sc; }, Y = function (y) { return (H - y) * sc; };
+    ctx.save();
+    ctx.fillStyle = c.sheet; ctx.fillRect(0, 0, W * sc, H * sc);
+    ctx.beginPath(); ctx.rect(0, 0, W * sc, H * sc); ctx.clip();
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    if (step < 5 || P.grid) {
+      ctx.strokeStyle = c.grid; ctx.lineWidth = Math.max(1, sc * 0.6) * (o.print ? 1.4 : 1);
+      stroke(ctx, g.edges, X, Y);
+    }
+    if (step === 3) {
+      ctx.strokeStyle = c.aux; ctx.lineWidth = Math.max(1, sc * 0.8); ctx.setLineDash([5, 4]);
+      var ext = g.rays.map(function (r) { return [r[0][0], r[0][1], r[0][0] + (r[1][0] - r[0][0]) * 1.7, r[0][1] + (r[1][1] - r[0][1]) * 1.7]; });
+      stroke(ctx, ext, X, Y); ctx.setLineDash([]);
+    }
+    if (step >= 4) {
+      if (step === 5 && P.style === "strap") {
+        var w = Math.max(3, P.strapW * P.s * sc), eo = Math.max(1, Math.min(2.4, w * 0.14));
+        ctx.save(); ctx.translate(Math.max(1, w * 0.12), Math.max(1.5, w * 0.18));
+        ctx.strokeStyle = "rgba(0,0,0," + (o.print ? ".14" : ".24") + ")"; ctx.lineWidth = w + 2 * eo; stroke(ctx, g.lines, X, Y);
+        ctx.restore();
+        ctx.strokeStyle = c.edge; ctx.lineWidth = w + 2 * eo; stroke(ctx, g.lines, X, Y);
+        ctx.strokeStyle = c.strap; ctx.lineWidth = w; stroke(ctx, g.lines, X, Y);
+        ctx.strokeStyle = "rgba(255,255,255,.2)"; ctx.lineWidth = Math.max(1, w * 0.26); stroke(ctx, g.lines, X, Y);
+      } else {
+        ctx.strokeStyle = c.pat; ctx.lineWidth = Math.max(1.4, sc * 1.1) * (o.print ? 1.3 : 1);
+        stroke(ctx, g.lines, X, Y);
+      }
+    }
+    if (step >= 2 && step <= 4) {
+      ctx.fillStyle = c.aux;
+      var r = Math.max(2.5, sc * 1.6);
+      ctx.beginPath();
+      for (var i = 0; i < g.mids.length; i++) { ctx.moveTo(X(g.mids[i][0]) + r, Y(g.mids[i][1])); ctx.arc(X(g.mids[i][0]), Y(g.mids[i][1]), r, 0, 2 * PI); }
+      ctx.fill();
+    }
+    ctx.restore();
+    ctx.strokeStyle = c.pat; ctx.lineWidth = 1.5; ctx.strokeRect(0.75, 0.75, W * sc - 1.5, H * sc - 1.5);
+    if (o.ui && P.att) {
+      var hx = X(P.ax), hy = Y(P.ay), rr = P.rad * sc;
+      ctx.save();
+      ctx.strokeStyle = c.aux; ctx.lineWidth = 1.5; ctx.setLineDash([6, 5]);
+      ctx.beginPath(); ctx.arc(hx, hy, Math.min(rr, 2000), 0, 2 * PI); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = c.sheet; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(hx, hy, 9, 0, 2 * PI); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = c.aux; ctx.beginPath(); ctx.arc(hx, hy, 3.5, 0, 2 * PI); ctx.fill();
+      ctx.restore();
+    }
+    return g;
+  }
+
+  var raf = 0, lastG = null;
+  function render() {
+    var cs = getComputedStyle(sheetwrap), pad = parseFloat(cs.paddingLeft) * 2 + 2;
+    var narrow = window.matchMedia("(max-width: 920px)").matches, short = window.innerHeight < 520;
+    var present = document.body.classList.contains("present");
+    var availW = Math.max(200, sheetwrap.clientWidth - pad);
+    /* Capped, so a viewer that sizes its frame to the page cannot make the drawing grow without end */
+    var vh = window.innerHeight, availH;
+    if (short) availH = clamp(vh * 0.78, 120, 420);
+    else if (narrow) availH = clamp(vh * (present ? 0.5 : 0.36), 150, present ? 520 : 380);
+    else availH = clamp(vh * (present ? 0.64 : 0.58), 300, present ? 720 : 600);
+    scale = Math.min(availW / P.W, availH / P.H);
+    var dpr = Math.min(3, Math.max(window.devicePixelRatio || 1, 2)), w = Math.round(P.W * scale), h = Math.round(P.H * scale);
+    cv.style.width = w + "px"; cv.style.height = h + "px";
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    var ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    lastG = draw(ctx, w / P.W, { ui: true });
+    scale = w / P.W;
+    updateReadout();
+  }
+  function schedule() { if (!raf) raf = requestAnimationFrame(function () { raf = 0; render(); }); }
+
+  function updateReadout() {
+    var n = lastG ? clipAll(lastG.lines).length : 0;
+    $("readout").innerHTML =
+      "<span>Tiling <b>" + TIL_LABEL[P.til] + "</b></span>" +
+      "<span>Angle <b>" + P.theta.toFixed(1) + "°</b></span>" +
+      "<span>Tile edge <b>" + P.s + " mm</b></span>" +
+      "<span>Panel <b>" + P.W + " × " + P.H + " mm</b></span>" +
+      "<span>Lines <b>" + n + "</b></span>";
+    $("cap").textContent = CAPTIONS[P.step];
+  }
+
+  /* ---------- Thumbnails: each tile previews its own pattern ---------- */
+  var thumbJobs = [], thumbRaf = 0;
+  function drawThumb(c, til, theta) {
+    var w = c.clientWidth; if (!w) return;
+    var dpr = Math.min(3, Math.max(window.devicePixelRatio || 1, 2)), px = Math.round(w * dpr);
+    c.width = px; c.height = px;
+    var ctx = c.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var T = TILINGS[til], save = {}, g;
+    Object.keys(P).forEach(function (k) { save[k] = P[k]; });
+    try {
+      P.til = til; P.theta = theta; P.att = false; P.W = w; P.H = w; P.ox = 0; P.oy = 0;
+      P.s = (w / 2) / Math.hypot(T.a1[0], T.a1[1]);
+      g = compute();
+    } finally { Object.keys(save).forEach(function (k) { P[k] = save[k]; }); }
+    var col = palette(false);
+    ctx.fillStyle = col.sheet; ctx.fillRect(0, 0, w, w);
+    ctx.beginPath(); ctx.rect(0, 0, w, w); ctx.clip();
+    ctx.strokeStyle = col.pat; ctx.lineWidth = 1.1; ctx.lineCap = "round";
+    stroke(ctx, g.lines, function (x) { return x; }, function (y) { return w - y; });
+  }
+  function scheduleThumbs() {
+    if (thumbRaf) return;
+    thumbRaf = requestAnimationFrame(function () {
+      thumbRaf = 0;
+      thumbJobs.forEach(function (j) { drawThumb(j.c, j.til, j.theta()); });
+    });
+  }
+  function makeTile(label, sub, til, thetaFn, onClick, attr) {
+    var b = document.createElement("button"); b.type = "button"; b.className = "tile";
+    Object.keys(attr).forEach(function (k) { b.dataset[k] = attr[k]; });
+    var c = document.createElement("canvas"); c.setAttribute("aria-hidden", "true");
+    var l = document.createElement("span"); l.className = "tl"; l.textContent = label;
+    var s = document.createElement("span"); s.className = "ts"; s.textContent = sub;
+    b.appendChild(c); b.appendChild(l); b.appendChild(s);
+    b.addEventListener("click", onClick);
+    thumbJobs.push({ c: c, til: til, theta: thetaFn });
+    return b;
+  }
+
+  /* ---------- Contact angle dial ---------- */
+  var TMIN = 5, TMAX = 85, dial = $("dial"), knob = $("knob");
+  function rotOf(v) { return -135 + (v - TMIN) / (TMAX - TMIN) * 270; }
+  (function buildTicks() {
+    var g = $("ticks"), NS = "http://www.w3.org/2000/svg";
+    for (var v = TMIN; v <= TMAX; v += 5) {
+      var major = ((v - TMIN) % 20 === 0), l = document.createElementNS(NS, "line");
+      l.setAttribute("x1", 60); l.setAttribute("x2", 60); l.setAttribute("y1", major ? 3 : 6); l.setAttribute("y2", 12);
+      l.setAttribute("class", major ? "tick major" : "tick");
+      l.setAttribute("transform", "rotate(" + rotOf(v) + " 60 60)");
+      g.appendChild(l);
+    }
+  })();
+  /* Feedback: a detent per whole degree, a firmer one on every 5 degree mark, a firm one at the ends.
+     Vibration uses the Vibration API where the device and viewer allow it, then the iOS Safari switch trick.
+     An optional click sound covers devices that cannot vibrate. */
+  var lastHap = 0, actx = null;
+  function vib(ms) {
+    try { if (navigator.vibrate) return !!navigator.vibrate(ms); } catch (e) {}
+    return false;
+  }
+  function clickSound(kind) {
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === "suspended") actx.resume();
+      var t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+      o.type = "triangle"; o.frequency.value = kind === "end" ? 620 : kind === "detent" ? 1050 : 1650;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(kind === "tick" ? 0.1 : 0.2, t + 0.002);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t + 0.04);
+    } catch (e) {}
+  }
+  function haptic(kind) {
+    var now = Date.now(); if (now - lastHap < 18) return; lastHap = now;
+    if (P.haptics) {
+      var ms = kind === "end" ? 45 : kind === "detent" ? 24 : 10;
+      if (!vib(ms)) { try { $("hl").click(); } catch (e) {} }
+    }
+    if (P.sound) clickSound(kind);
+  }
+  function setTheta(v) {
+    var old = P.theta, nv = clamp(Math.round(v * 2) / 2, TMIN, TMAX);
+    if (nv === old) return;
+    P.theta = nv;
+    if (nv === TMIN || nv === TMAX) haptic("end");
+    else if (Math.floor(nv / 5) !== Math.floor(old / 5)) haptic("detent");
+    else if (Math.floor(nv) !== Math.floor(old)) haptic("tick");
+    changed();
+  }
+  var dragging = false;
+  function fromPointer(e) {
+    var r = dial.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    var ang = Math.atan2(e.clientX - cx, -(e.clientY - cy)) * 180 / PI;
+    if (Math.abs(ang) > 135) ang = rotOf(P.theta) > 0 ? 135 : -135;
+    setTheta(Math.round(TMIN + (ang + 135) / 270 * (TMAX - TMIN)));
+  }
+  dial.addEventListener("pointerdown", function (e) { dragging = true; dial.classList.add("drag"); dial.setPointerCapture(e.pointerId); haptic("tick"); fromPointer(e); });
+  dial.addEventListener("pointermove", function (e) { if (dragging) fromPointer(e); });
+  function endDial() { dragging = false; dial.classList.remove("drag"); }
+  dial.addEventListener("pointerup", endDial); dial.addEventListener("pointercancel", endDial);
+  dial.addEventListener("keydown", function (e) {
+    var d = e.shiftKey ? 5 : 0.5, k = e.key;
+    if (k === "ArrowRight" || k === "ArrowUp") setTheta(P.theta + d);
+    else if (k === "ArrowLeft" || k === "ArrowDown") setTheta(P.theta - d);
+    else if (k === "Home") setTheta(TMIN);
+    else if (k === "End") setTheta(TMAX);
+    else return;
+    e.preventDefault();
+  });
+  $("hap").addEventListener("change", function () {
+    P.haptics = $("hap").checked;
+    try { localStorage.setItem("pl.haptics", P.haptics ? "1" : "0"); } catch (e) {}
+    haptic("detent");
+  });
+  $("aMinus").addEventListener("click", function () { haptic("tick"); setTheta(P.theta - 0.5); });
+  $("aPlus").addEventListener("click", function () { haptic("tick"); setTheta(P.theta + 0.5); });
+  $("snd").addEventListener("change", function () {
+    P.sound = $("snd").checked;
+    try { localStorage.setItem("pl.sound", P.sound ? "1" : "0"); } catch (e) {}
+    if (P.sound) clickSound("detent");
+  });
+  $("hapTest").addEventListener("click", function () {
+    var note = $("hapNote");
+    if (!navigator.vibrate) note.textContent = "This device has no web vibration. iPhones and computers do not vibrate on web pages. Turn on the click sound instead.";
+    else if (vib([40, 60, 40])) note.textContent = "Vibration is available. If you felt nothing, check that silent mode and battery saver are off.";
+    else note.textContent = "This browser or viewer blocks vibration here. Tap the page once and test again, or turn on the click sound.";
+  });
+
+  /* ---------- Controls ---------- */
+  function pct(inp) { return ((+inp.value - +inp.min) / (+inp.max - +inp.min) * 100) + "%"; }
+  function sync() {
+    $("o-theta").textContent = P.theta.toFixed(1) + "°";
+    knob.style.transform = "rotate(" + rotOf(P.theta) + "deg)";
+    dial.setAttribute("aria-valuenow", P.theta); dial.setAttribute("aria-valuetext", P.theta.toFixed(1) + " degrees");
+    $("str").value = P.str; $("o-str").textContent = (P.str > 0 ? "+" : "") + P.str + "°";
+    $("rad").value = P.rad; $("o-rad").textContent = P.rad + " mm";
+    $("s").value = P.s; $("o-s").textContent = P.s + " mm";
+    $("W").value = P.W; $("H").value = P.H;
+    $("strapW").value = P.strapW; $("o-strapW").textContent = Math.round(P.strapW * 100) + "% of edge";
+    Array.prototype.forEach.call(document.querySelectorAll("input[type=range]"), function (r) { r.style.setProperty("--p", pct(r)); });
+    $("att").checked = P.att; $("grid").checked = P.grid; $("hap").checked = P.haptics; $("snd").checked = P.sound;
+    $("xGrid").checked = P.xGrid; $("xPanel").checked = P.xPanel; $("xTitle").checked = P.xTitle;
+    $("str").disabled = !P.att; $("rad").disabled = !P.att;
+    $("strapW").disabled = P.style !== "strap";
+    $("steps").style.setProperty("--i", P.step - 1);
+    $("styles").style.setProperty("--i", P.style === "strap" ? 1 : 0);
+    Array.prototype.forEach.call($("tilings").children, function (b) { b.setAttribute("aria-pressed", String(b.dataset.til === P.til)); });
+    Array.prototype.forEach.call($("styles").children, function (b) { b.setAttribute("aria-pressed", String(b.dataset.style === P.style)); });
+    Array.prototype.forEach.call($("steps").children, function (b) { b.setAttribute("aria-pressed", String(+b.dataset.step === P.step)); });
+    Array.prototype.forEach.call($("presets").children, function (b) {
+      var p = PRESETS[+b.dataset.i]; b.setAttribute("aria-pressed", String(p.til === P.til && p.theta === P.theta));
+    });
+  }
+  function minTile() { return Math.max(P.W, P.H) / 60; }
+  function changed() { P.s = Math.max(P.s, Math.ceil(minTile() / 5) * 5); sync(); schedule(); scheduleThumbs(); }
+
+  Object.keys(TILINGS).forEach(function (k) {
+    $("tilings").appendChild(makeTile(TIL_LABEL[k], TILINGS[k].name, k, function () { return P.theta; },
+      function () { P.til = k; changed(); }, { til: k }));
+  });
+  PRESETS.forEach(function (p, i) {
+    $("presets").appendChild(makeTile(p.label, p.sub, p.til, function () { return p.theta; },
+      function () { P.til = p.til; P.theta = p.theta; P.step = 5; changed(); }, { i: i }));
+  });
+  Array.prototype.forEach.call($("steps").children, function (b) { b.addEventListener("click", function () { P.step = +b.dataset.step; changed(); }); });
+  Array.prototype.forEach.call($("styles").children, function (b) { b.addEventListener("click", function () { P.style = b.dataset.style; P.step = 5; changed(); }); });
+  function bindRange(id, k) { $(id).addEventListener("input", function () { P[k] = +$(id).value; changed(); }); }
+  bindRange("str", "str"); bindRange("rad", "rad"); bindRange("s", "s"); bindRange("strapW", "strapW");
+  $("W").addEventListener("change", function () { P.W = clamp(+$("W").value || 900, 100, 3000); P.ax = clamp(P.ax, 0, P.W); changed(); });
+  $("H").addEventListener("change", function () { P.H = clamp(+$("H").value || 600, 100, 3000); P.ay = clamp(P.ay, 0, P.H); changed(); });
+  $("att").addEventListener("change", function () { P.att = $("att").checked; changed(); });
+  $("grid").addEventListener("change", function () { P.grid = $("grid").checked; changed(); });
+  $("xGrid").addEventListener("change", function () { P.xGrid = $("xGrid").checked; });
+  $("xPanel").addEventListener("change", function () { P.xPanel = $("xPanel").checked; });
+  $("xTitle").addEventListener("change", function () { P.xTitle = $("xTitle").checked; });
+  $("bReset").addEventListener("click", function () { P.ox = 0; P.oy = 0; P.ax = P.W / 2; P.ay = P.H / 2; changed(); });
+  $("bSurprise").addEventListener("click", function () {
+    P.til = SURPRISE[Math.floor(Math.random() * SURPRISE.length)];
+    P.theta = Math.round((30 + Math.random() * 50) * 2) / 2; P.step = 5; changed();
+  });
+  $("bPresent").addEventListener("click", function () {
+    var on = !document.body.classList.contains("present");
+    document.body.classList.toggle("present", on);
+    $("bPresent").setAttribute("aria-pressed", String(on));
+    $("bPresent").textContent = on ? "Show controls" : "Present";
+    schedule();
+  });
+
+  /* Pointer: pan the tiling or move the attractor */
+  var drag = null;
+  function mmFromEvent(e) { var r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / scale, P.H - (e.clientY - r.top) / scale]; }
+  cv.addEventListener("pointerdown", function (e) {
+    var m = mmFromEvent(e);
+    var onHandle = P.att && Math.hypot((m[0] - P.ax) * scale, (m[1] - P.ay) * scale) < 24;
+    drag = { mode: onHandle ? "att" : "pan", x: e.clientX, y: e.clientY };
+    cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    var dx = (e.clientX - drag.x) / scale, dy = (e.clientY - drag.y) / scale;
+    drag.x = e.clientX; drag.y = e.clientY;
+    if (drag.mode === "att") { var m = mmFromEvent(e); P.ax = clamp(m[0], 0, P.W); P.ay = clamp(m[1], 0, P.H); }
+    else { P.ox += dx; P.oy -= dy; }
+    schedule();
+  });
+  function endDrag() { drag = null; }
+  cv.addEventListener("pointerup", endDrag); cv.addEventListener("pointercancel", endDrag);
+
+  var lastW = window.innerWidth, lastH = window.innerHeight;
+  window.addEventListener("resize", function () {
+    /* Phone address bars change the height while scrolling; ignore small height changes */
+    if (window.innerWidth !== lastW || Math.abs(window.innerHeight - lastH) > 120) { lastW = window.innerWidth; lastH = window.innerHeight; schedule(); scheduleThumbs(); }
+  });
+  $("bMove").addEventListener("click", function () {
+    var on = !cv.classList.contains("drag-on");
+    cv.classList.toggle("drag-on", on);
+    $("bMove").setAttribute("aria-pressed", String(on));
+  });
+  Array.prototype.forEach.call(document.querySelectorAll(".panel .group"), function (d) { d.addEventListener("toggle", scheduleThumbs); });
+  if (window.matchMedia("(max-width: 920px)").matches) {
+    Array.prototype.forEach.call(document.querySelectorAll(".panel .group"), function (d, i) { if (i > 0) d.removeAttribute("open"); });
+    var ctxBox = document.querySelector(".context"); if (ctxBox) ctxBox.removeAttribute("open");
+  }
+  if (window.ResizeObserver) new ResizeObserver(schedule).observe(sheetwrap);
+  function themeChanged() { schedule(); scheduleThumbs(); }
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) mq.addEventListener("change", themeChanged);
+  }
+  new MutationObserver(themeChanged).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  /* ---------- Export (every format carries the author) ---------- */
+  function exportGeom() {
+    var g = compute();
+    return { pattern: clipAll(g.lines), tiling: P.xGrid ? clipAll(g.edges) : [], panel: P.xPanel, title: P.xTitle };
+  }
+  function f4(v) { return (Math.round(v * 10000) / 10000).toFixed(4); }
+  function tbHeight() { return Math.max(16, P.W * 0.035); }
+  function today() { return new Date().toISOString().slice(0, 10); }
+  function titleLines() {
+    return [
+      APP.toUpperCase() + " | " + AUTHOR_LINE,
+      "Tiling " + P.til + " | contact angle " + P.theta.toFixed(1) + " deg" + (P.att ? " (attractor " + P.str + " deg)" : "") +
+        " | tile edge " + P.s + " mm | panel " + P.W + " x " + P.H + " mm | units mm | " + today()
+    ];
+  }
+  function xmlEsc(t) { return t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  function buildDXF() {
+    var G = exportGeom(), L = [], T = tbHeight();
+    function add(c, v) { L.push(String(c), String(v)); }
+    add(999, APP + " | author: " + AUTHOR + " | " + AUTHOR_LINK);
+    add(999, "Tiling " + P.til + " | contact angle " + P.theta.toFixed(1) + " deg | tile edge " + P.s + " mm | units: millimetres | " + today());
+    add(0, "SECTION"); add(2, "HEADER"); add(9, "$ACADVER"); add(1, "AC1009"); add(0, "ENDSEC");
+    add(0, "SECTION"); add(2, "TABLES");
+    add(0, "TABLE"); add(2, "LTYPE"); add(70, 1);
+    add(0, "LTYPE"); add(2, "CONTINUOUS"); add(70, 0); add(3, "Solid line"); add(72, 65); add(73, 0); add(40, "0.0");
+    add(0, "ENDTAB");
+    add(0, "TABLE"); add(2, "LAYER"); add(70, 4);
+    [["PATTERN", 7], ["TILING", 8], ["PANEL", 5], ["TITLE", 2]].forEach(function (l) {
+      add(0, "LAYER"); add(2, l[0]); add(70, 0); add(62, l[1]); add(6, "CONTINUOUS");
+    });
+    add(0, "ENDTAB"); add(0, "ENDSEC");
+    add(0, "SECTION"); add(2, "ENTITIES");
+    function line(layer, a) {
+      add(0, "LINE"); add(8, layer);
+      add(10, f4(a[0])); add(20, f4(a[1])); add(30, "0.0");
+      add(11, f4(a[2])); add(21, f4(a[3])); add(31, "0.0");
+    }
+    function text(layer, x, y, h, t) {
+      add(0, "TEXT"); add(8, layer); add(10, f4(x)); add(20, f4(y)); add(30, "0.0"); add(40, f4(h)); add(1, t);
+    }
+    G.pattern.forEach(function (a) { line("PATTERN", a); });
+    G.tiling.forEach(function (a) { line("TILING", a); });
+    if (G.panel) {
+      var W = P.W, H = P.H;
+      [[0, 0, W, 0], [W, 0, W, H], [W, H, 0, H], [0, H, 0, 0]].forEach(function (a) { line("PANEL", a); });
+    }
+    if (G.title) {
+      var tl = titleLines();
+      text("TITLE", 0, -T * 0.45, T * 0.26, tl[0]);
+      text("TITLE", 0, -T * 0.85, T * 0.17, tl[1]);
+    }
+    add(0, "ENDSEC"); add(0, "EOF");
+    return L.join("\n") + "\n";
+  }
+
+  function buildSVG() {
+    var G = exportGeom(), W = P.W, H = P.H, T = G.title ? tbHeight() : 0, tl = titleLines();
+    function d(segs) { return segs.map(function (a) { return "M" + f4(a[0]) + " " + f4(a[1]) + "L" + f4(a[2]) + " " + f4(a[3]); }).join(""); }
+    var o = '<?xml version="1.0" encoding="UTF-8"?>\n';
+    o += '<svg xmlns="http://www.w3.org/2000/svg" width="' + W + 'mm" height="' + (H + T) + 'mm" viewBox="0 0 ' + W + " " + (H + T) + '">\n';
+    o += "<title>" + xmlEsc(APP + " pattern " + P.til + " at " + P.theta.toFixed(1) + " deg") + "</title>\n";
+    o += "<desc>" + xmlEsc("Created with " + APP + " by " + AUTHOR_LINE + ". " + AUTHOR_LINK + ". Units: millimetres.") + "</desc>\n";
+    o += '<metadata><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/"><rdf:Description>' +
+         "<dc:creator>" + AUTHOR + "</dc:creator><dc:title>" + xmlEsc(APP) + "</dc:title><dc:date>" + today() + "</dc:date></rdf:Description></rdf:RDF></metadata>\n";
+    o += '<g transform="translate(0 ' + H + ') scale(1 -1)" fill="none" stroke-linecap="round">\n';
+    if (G.tiling.length) o += '<path id="TILING" stroke="#9AA8B8" stroke-width="0.3" d="' + d(G.tiling) + '"/>\n';
+    o += '<path id="PATTERN" stroke="#2B1A0E" stroke-width="0.6" d="' + d(G.pattern) + '"/>\n';
+    if (G.panel) o += '<rect id="PANEL" stroke="#C84E08" stroke-width="0.6" x="0" y="0" width="' + W + '" height="' + H + '"/>\n';
+    o += "</g>\n";
+    if (G.title) {
+      o += '<g id="TITLE" font-family="Arial, Helvetica, sans-serif" fill="#2B1A0E">\n';
+      o += '<text x="0" y="' + f4(H + T * 0.45) + '" font-size="' + f4(T * 0.26) + '" font-weight="bold">' + xmlEsc(tl[0]) + "</text>\n";
+      o += '<text x="0" y="' + f4(H + T * 0.85) + '" font-size="' + f4(T * 0.17) + '">' + xmlEsc(tl[1]) + "</text>\n</g>\n";
+    }
+    o += "</svg>\n";
+    return o;
+  }
+
+  /* Minimal store-only zip, so the .dxf reaches the user with its real extension */
+  var CRC = (function () { var t = []; for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  function crc32(b) { var c = 0xFFFFFFFF; for (var i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  function makeZip(files) {
+    var enc = new TextEncoder(), parts = [], cen = [], off = 0, now = new Date();
+    var dtime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+    var ddate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+    files.forEach(function (f) {
+      var name = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+      var h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(8, 0, true);
+      h.setUint16(10, dtime, true); h.setUint16(12, ddate, true); h.setUint32(14, crc, true);
+      h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
+      parts.push(new Uint8Array(h.buffer), name, data);
+      var c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(10, 0, true);
+      c.setUint16(12, dtime, true); c.setUint16(14, ddate, true); c.setUint32(16, crc, true);
+      c.setUint32(20, data.length, true); c.setUint32(24, data.length, true); c.setUint16(28, name.length, true);
+      c.setUint32(42, off, true);
+      cen.push(new Uint8Array(c.buffer), name);
+      off += 30 + name.length + data.length;
+    });
+    var cenSize = cen.reduce(function (a, p) { return a + p.length; }, 0);
+    var e = new DataView(new ArrayBuffer(22));
+    e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true);
+    e.setUint32(12, cenSize, true); e.setUint32(16, off, true);
+    return new Blob(parts.concat(cen, [new Uint8Array(e.buffer)]), { type: "application/zip" });
+  }
+
+  function baseName() { return "pinjrakari-lab-" + P.til.replace(/\./g, "-") + "-" + String(P.theta).replace(".", "p") + "deg-" + P.s + "mm"; }
+  var statusT = 0;
+  function say(msg) { var s = $("status"); s.textContent = msg; clearTimeout(statusT); statusT = setTimeout(function () { s.textContent = ""; }, 6000); }
+  function save(filename, data) {
+    try {
+      var blob = data instanceof Blob ? data : new Blob([data], { type: /\.svg$/.test(filename) ? "image/svg+xml" : "text/plain" });
+      var url = URL.createObjectURL(blob), link = document.createElement("a");
+      link.href = url; link.download = filename; document.body.appendChild(link); link.click(); link.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+      say("Downloaded " + filename);
+    } catch (e) { say("This browser could not start the download."); }
+  }
+  $("bDxf").addEventListener("click", function () {
+    var b = baseName();
+    save(b + ".zip", makeZip([{ name: b + ".dxf", text: buildDXF() }, { name: b + ".svg", text: buildSVG() }]));
+  });
+  $("bSvg").addEventListener("click", function () { save(baseName() + ".svg", buildSVG()); });
+  $("bPng").addEventListener("click", function () {
+    var pw = 2400, sc = pw / P.W, ph = Math.round(P.H * sc), T = P.xTitle ? Math.round(tbHeight() * sc) : 0;
+    var c = document.createElement("canvas"); c.width = pw; c.height = ph + T;
+    var ctx = c.getContext("2d");
+    ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, pw, ph + T);
+    draw(ctx, sc, { ui: false, print: true });
+    if (T) {
+      var tl = titleLines();
+      ctx.fillStyle = "#2B1A0E"; ctx.textBaseline = "alphabetic";
+      ctx.font = "bold " + Math.round(T * 0.26) + "px Arial, Helvetica, sans-serif"; ctx.fillText(tl[0], 0, ph + T * 0.45);
+      ctx.font = Math.round(T * 0.17) + "px Arial, Helvetica, sans-serif"; ctx.fillText(tl[1], 0, ph + T * 0.85);
+    }
+    c.toBlob(function (blob) { if (blob) save(baseName() + ".png", blob); else say("Could not make the image."); }, "image/png");
+  });
+  $("bCopy").addEventListener("click", function () {
+    var text = buildDXF();
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { say("DXF text copied. Paste into a .txt file and rename it to .dxf."); },
+        function () { say("Copy was blocked here. Use the download button."); });
+    } else say("Copy is not available here. Use the download button.");
+  });
+
+  sync(); render(); scheduleThumbs();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { schedule(); scheduleThumbs(); });
+})();
+</script>
+
+</body>
+</html>
