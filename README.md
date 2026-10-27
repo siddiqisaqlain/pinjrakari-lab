@@ -1,56 +1,49 @@
 # Pinjrakari Lab
 
-An interactive Islamic star pattern generator, inspired by Kashmiri pinjrakari lattice work.
-Pick a tiling, turn the contact-angle dial, and export a real-scale drawing to CAD (DXF), SVG or PNG.
+**Live:** https://siddiqisaqlain.github.io/pinjrakari-lab/
 
-**Author:** Saqlain Siddiqi, B.Arch, IUST Awantipora, Kashmir
-**Copyright:** © 2026 Saqlain Siddiqi
+An interactive Islamic star pattern generator, inspired by the geometric woodwork of Kashmir.
+Pick a base tiling, turn the contact-angle dial, and export a real-scale drawing for CAD.
 
-It is a static site: no build step, no server, no dependencies. Open `index.html` and it works.
+![Pinjrakari Lab](og-image.png)
 
-## Files
+## What it does
 
-| File | Purpose |
-|---|---|
-| `index.html` | The whole app (HTML, CSS, JavaScript) |
-| `favicon.svg` | Browser tab icon (follows light/dark mode) |
-| `apple-touch-icon.png` | Icon when saved to a phone home screen |
-| `og-image.png` | Preview card shown when the link is shared (1200 × 630) |
-| `.nojekyll` | Tells GitHub Pages to serve files as they are |
+- **Six base tilings:** square, triangle, hexagon, 4.8.8, 3.6.3.6 and 3.12.12, with starter presets such as the eight-point and twelve-point stars.
+- **Contact-angle dial:** one control, from 5° to 85°, sets how open or tight the stars become.
+- **Step-by-step construction:** view the tiling, the edge midpoints, the rays, the trim and the finished pattern in turn.
+- **Attractor:** bends the angle around a point you drag, so a single pattern can vary across a panel.
+- **Strapwork view:** draws the lines as wooden strips, the way a pinjrakari screen reads.
+- **Real-scale export:** DXF, SVG and PNG at the tile and panel size you set, in millimetres.
 
-## Run locally
+## How it works
 
-Double-click `index.html`, or from this folder run `python3 -m http.server` and open http://localhost:8000.
+The patterns use Hankin's polygons-in-contact method. Start from a tiling of regular polygons, place two rays at the midpoint of every edge, tilted by the contact angle, and trim each ray where it meets its neighbour. What remains is the star pattern.
 
-## Publish free on GitHub Pages
+## Context
 
-1. Create a GitHub account if you do not have one, then click **New repository**. Name it `pinjrakari-lab`, set it to **Public**.
-2. Click **uploading an existing file**, drag in everything from this folder (including `.nojekyll`), and commit.
-3. Go to **Settings → Pages**. Under *Build and deployment*, choose **Deploy from a branch**, branch `main`, folder `/ (root)`, then **Save**.
-4. After about a minute the site is live at `https://<your-username>.github.io/pinjrakari-lab/`.
-5. Open `index.html` in the repository, click the pencil icon, and change both `og-image.png` values (the `og:image` and `twitter:image` lines) to the full address, for example
-   `https://<your-username>.github.io/pinjrakari-lab/og-image.png`.
-   Link previews on WhatsApp, LinkedIn and X need the full address.
-
-## Alternative: Netlify (fastest)
-
-Go to https://app.netlify.com/drop and drag this folder onto the page. You get a live link in seconds.
-Then do step 5 above with your Netlify address.
-
-## Later: your own website
-
-- **Own domain:** buy one, then add it under GitHub **Settings → Pages → Custom domain** (or Netlify **Domain management**). HTTPS is automatic.
-- **Part of a bigger site:** keep this folder as `/pinjrakari-lab/` inside the larger site, or link to it from a menu.
-- **Update:** edit `index.html` and commit; the site refreshes by itself.
+- **Pinjrakari:** Kashmiri lattice screens, made from small pieces of wood fitted together.
+- **Khatamband:** Kashmiri ceilings made of small interlocking wooden pieces that form geometric patterns. The eight-point and twelve-point presets belong to the same family of geometry.
 
 ## Using the exports
 
-- **DXF:** unzip the download. Units are millimetres, 1 drawing unit = 1 mm. Layers: `PATTERN`, `TILING`, `PANEL`, `TITLE`. Opens in AutoCAD, Rhino, Fusion, LibreCAD.
-- **SVG:** millimetre sizes, opens in Illustrator, Inkscape, Figma, or a laser-cutter workflow.
+- **DXF:** unzip the download. Units are millimetres (1 drawing unit = 1 mm). Layers: `PATTERN`, `TILING`, `PANEL`, `TITLE`. Opens in AutoCAD, Rhino, Fusion and LibreCAD.
+- **SVG:** millimetre sizes. Opens in Illustrator, Inkscape and Figma, and works in laser-cutting workflows.
 - **PNG:** 2400 px, with a title strip.
+
+## Run locally
+
+It is a single static page with no build step and no dependencies. Open `index.html`, or run `python3 -m http.server` in this folder and visit http://localhost:8000.
 
 ## Credits
 
-- Method: Hankin's polygons-in-contact, as described by Craig S. Kaplan.
-- Reference paper: Lee, Kim and Jeon, on algorithmic control of Islamic star patterns, summarised at https://parametrichouse.com/the-islamic-star-pattern/
-- This is a student project. Add a licence file (for example MIT, or "all rights reserved") before inviting others to reuse the code.
+- Method: Hankin's polygons-in-contact technique, as described by Craig S. Kaplan.
+- Algorithmic control of the patterns: Lee, Kim and Jeon, summarised on [Parametric House](https://parametrichouse.com/the-islamic-star-pattern/).
+
+## Author
+
+**Saqlain Siddiqi**, B.Arch student, IUST Awantipora, Kashmir · [LinkedIn](https://linkedin.com/in/saqlain-siddiqi)
+
+## Licence
+
+[MIT](LICENSE) © 2026 Saqlain Siddiqi
